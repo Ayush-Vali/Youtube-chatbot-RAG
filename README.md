@@ -1,9 +1,9 @@
 # Youtube 
 
 For this project, the transcript can be loaded using 
-1) YTLoader (its little buggy)
-2) Youtube API
-We'll choose 2nd option
+1) YTLoader 
+2) Youtube API\
+Since YTLoader can be buggy, We'll choose 2nd option
 
 
 
