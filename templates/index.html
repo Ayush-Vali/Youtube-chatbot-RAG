@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube RAG Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 20px; }
+        input, button, textarea { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; }
+        button { background: #0066cc; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0055aa; }
+        #result, #chat { margin-top: 25px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
+        .message { margin: 12px 0; padding: 10px; background: #f9f9f9; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video RAG Q&A</h1>
+    
+    <form id="processForm">
+        <input type="text" id="video_id" placeholder="YouTube URL or Video ID (e.g. Gfr50f6ZBvo)" required>
+        <button type="submit">Process Video</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div id="chat" style="display: none;">
+        <h3>Ask anything about the video</h3>
+        <input type="text" id="question" placeholder="Type your question here...">
+        <button onclick="askQuestion()">Ask</button>
+        <div id="conversation"></div>
+    </div>
+
+    <script>
+        document.getElementById('processForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const videoId = document.getElementById('video_id').value.trim();
+            
+            const res = await fetch('/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `video_id=${encodeURIComponent(videoId)}`
+            });
+            
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ Video Processed: ${data.video_id}</h2>
+                    <h3>Summary</h3>
+                    <p>${data.summary}</p>
+                    <h3>Transcript Preview</h3>
+                    <pre style="white-space: pre-wrap;">${data.transcript_preview}</pre>
+                `;
+                document.getElementById('chat').style.display = 'block';
+            } else {
+                document.getElementById('result').innerHTML = `<p style="color:red;">Error: ${data.message}</p>`;
+            }
+        });
+
+        async function askQuestion() {
+            const q = document.getElementById('question').value.trim();
+            if (!q) return;
+
+            const conv = document.getElementById('conversation');
+            conv.innerHTML += `<div class="message"><strong>You:</strong> ${q}</div>`;
+
+            const res = await fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `question=${encodeURIComponent(q)}`
+            });
+
+            const data = await res.json();
+            if (data.status === 'success') {
+                conv.innerHTML += `<div class="message"><strong>AI:</strong> ${data.answer}</div>`;
+            } else {
+                conv.innerHTML += `<div class="message" style="color:red;">${data.message}</div>`;
+            }
+
+            document.getElementById('question').value = '';
+            conv.scrollTop = conv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
