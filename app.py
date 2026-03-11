@@ -43,7 +43,7 @@ Question: {question}""",
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-# ====================== HELPER FUNCTIONS ======================
+# ============================================
 def build_rag(video_id: str):
     global vector_store, qa_chain
 
@@ -59,7 +59,7 @@ def build_rag(video_id: str):
     vector_store = FAISS.from_documents(chunks, embeddings)
     retriever = vector_store.as_retriever(search_kwargs={"k": 4})
 
-    # 4. Chain (exactly your final chain)
+    # 4. Chain 
     parallel = RunnableParallel({
         "context": retriever | RunnableLambda(format_docs),
         "question": RunnablePassthrough()
@@ -67,7 +67,7 @@ def build_rag(video_id: str):
 
     qa_chain = parallel | prompt | llm | StrOutputParser()
 
-    # Simple summary (you can improve this later)
+    # Simple summary 
     summary = full_transcript[:800] + "..." if len(full_transcript) > 800 else full_transcript
     return full_transcript, summary
 
@@ -111,4 +111,5 @@ def ask():
         return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0', port=5000, debug=True)
